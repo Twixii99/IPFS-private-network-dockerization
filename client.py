@@ -216,7 +216,7 @@ def get_hashes(*cids: str, target: str='all', ip: str='172.17.0.2', port: int=50
 	finally:
 		client.close()
 
-def remove(cid: str, recursive: bool=False, ip: str='172.17.0.2', port: int=5001):
+def remove(cid: str, ip: str='172.17.0.2', port: int=5001):
 	"""
 	This function used to unpin a specific file or folder from the pinned list
 	
@@ -225,22 +225,27 @@ def remove(cid: str, recursive: bool=False, ip: str='172.17.0.2', port: int=5001
 	1) cid: the contenet id to be removed from the pin lise
 	2) recursive: indicates if the cid corresponds to a file or folder (True -> folder, False -> file)
 	3) ip: the node IP exists in an IPFS network.
-   4) port: the port used to connect to that specific node -> 5001 by default -> get a look at the documentation.
+	4) port: the port used to connect to that specific node -> 5001 by default -> get a look at the documentation.
         	@Link https://docs.ipfs.io/how-to/configure-node/#addresses-api
      		It's is also available to use 8080/tcp
 	
 	"""
 	client = ipfshttpclient.Client('/ip4/' + ip + '/tcp/' + str(port), timeout=60)
 	try:
-		client.pin.rm(cid, recursive=recursive)
-	except NewConnectionError as connectionError:	
-		print(connectionError)
+		out = client.pin.rm(cid)
+	except ErrorResponse as er:
+		print(er)
+	except NewConnectionError as ce:	
+		print(ce)
 	except ConnectionError as cnc:
 		print(cnc)
+	except HTTPError as e:
+		print('Check the type of the pinned content.')
 	except TimeoutError as te:
 		print(te)
 	except PermissionError as p:
-		print(p)
+		print(p, 'The process has been terminated!', sep='\n')
+	else:
+		print('%s deleted sucessfully...' %cid)
 	finally:
 		client.close()
-		print('Done!')
